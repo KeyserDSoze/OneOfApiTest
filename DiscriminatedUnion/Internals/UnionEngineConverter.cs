@@ -1,0 +1,123 @@
+﻿using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+namespace System
+{
+    internal sealed class UnionEngineConverter : JsonConverter<object>
+    {
+        private const string ValuePropertyName = "Value";
+        private const string ReadMethodName = "Read";
+        private const string WriteMethodName = "Write";
+        private readonly JsonSerializerOptions _options;
+        private readonly Type[] _types;
+        private readonly Dictionary<Type, ReadHelper> _readers = [];
+        private readonly Dictionary<Type, WriteHelper> _writers = [];
+        private readonly Dictionary<Type, Dictionary<string, bool>> _properties = [];
+        private readonly Type _unionOfType;
+        private readonly PropertyInfo _value;
+        public UnionEngineConverter(JsonSerializerOptions options, params Type[] types)
+        {
+            _options = options;
+            _types = types;
+            foreach (var type in types)
+            {
+                var converter = options.GetConverter(type);
+                var readHelperType = typeof(ReadHelper<>).MakeGenericType(type);
+                var jsonConvertType = typeof(JsonConverter<>).MakeGenericType(type!);
+                var readMethod = jsonConvertType.GetMethods().First(x => x.Name == ReadMethodName);
+                var writeMethod = jsonConvertType.GetMethods().First(x => x.Name == WriteMethodName);
+                var reader = (Activator.CreateInstance(readHelperType, [converter, readMethod]) as ReadHelper)!;
+                _readers.Add(type, reader);
+                _writers.Add(type, new WriteHelper(converter, writeMethod));
+                _properties.Add(type, type.GetProperties().Select(x => x.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? x.Name).ToDictionary(x => x, x => true));
+            }
+            _unionOfType = GetUnionType(types.Length).MakeGenericType(_types);
+            _value = _unionOfType.GetProperty(ValuePropertyName)!;
+
+            static Type GetUnionType(int numberOfTypes)
+            {
+                return numberOfTypes switch
+                {
+                    2 => typeof(UnionOf<,>),
+                    3 => typeof(UnionOf<,,>),
+                    _ => throw new NotSupportedException()
+                };
+            }
+        }
+        public override object Read(
+            ref Utf8JsonReader reader,
+            Type typeToConvert,
+            JsonSerializerOptions options)
+        {
+            if (reader.TokenType == JsonTokenType.Null)
+            {
+                return null!;
+            }
+            var currentType = GetPossibleType(reader);
+            if (currentType != null)
+            {
+                var instance = (dynamic)Activator.CreateInstance(_unionOfType)!;
+                var readHelper = _readers[currentType];
+                var result = readHelper.Read(ref reader, currentType, options);
+                _value.SetValue(instance, result);
+                return instance;
+            }
+            else
+            {
+                return null!;
+            }
+        }
+        private Type? GetPossibleType(Utf8JsonReader reader)
+        {
+            foreach (var type in _types)
+            {
+                var isPrimitive =
+                       (reader.TokenType == JsonTokenType.String && type == typeof(string))
+                    || (reader.TokenType == JsonTokenType.Number && type.IsNumeric())
+                    || ((reader.TokenType == JsonTokenType.True || reader.TokenType == JsonTokenType.False) && (type == typeof(bool) || type == typeof(bool?)));
+                if (isPrimitive)
+                    return type;
+            }
+            List<string> properties = new();
+            while (reader.Read())
+            {
+                if (reader.TokenType == JsonTokenType.EndObject)
+                    break;
+                if (reader.TokenType == JsonTokenType.PropertyName)
+                {
+                    properties.Add(reader.GetString()!);
+                }
+            }
+            foreach (var type in _types)
+            {
+                var propertiesAsNameMap = _properties[type];
+                foreach (var property in properties)
+                {
+                    if (!propertiesAsNameMap.ContainsKey(property))
+                    {
+                        break;
+                    }
+                }
+                return type;
+            }
+            return null;
+        }
+        public override void Write(
+            Utf8JsonWriter writer,
+            object value,
+            JsonSerializerOptions options)
+        {
+            if (value != null)
+            {
+                var dynamicValue = ((dynamic)value).Value;
+                if (dynamicValue != null)
+                {
+                    var currentType = (dynamicValue.GetType() as Type)!;
+                    var writeHelper = _writers[currentType];
+                    writeHelper.Write(writer, dynamicValue, options);
+                }
+            }
+        }
+    }
+}

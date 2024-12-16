@@ -16,7 +16,8 @@ var alof1 = new Alof
     Felicina = "Felicina",
     Numbers = 3,
     Camerun = true,
-    SalutiEBaci = 3
+    SalutiEBaci = 3,
+    Fakam = 4
 };
 var alof2 = new Alof
 {
@@ -29,7 +30,8 @@ var alof2 = new Alof
     Felicina = "Felicina",
     Numbers = 3,
     Camerun = true,
-    SalutiEBaci = new Porlo { Selfish = "Saluti.Porlo.Selfish", Value = "Saluti.Porlo.Value" }
+    SalutiEBaci = new Porlo { Selfish = "Saluti.Porlo.Selfish", Value = "Saluti.Porlo.Value" },
+    Fakam = new Fakam { Olaf = "Fakam.Olaf" }
 };
 var alof3 = new Alof
 {
@@ -62,7 +64,11 @@ Console.WriteLine(fromJson.Settings);
 Console.WriteLine(fromJson.Felicina);
 Console.WriteLine(fromJson.Numbers);
 Console.WriteLine(fromJson.Camerun);
+Console.WriteLine(fromJson.SalutiEBaci.Index);
+Console.WriteLine(fromJson.SalutiEBaci.Value);
+Console.WriteLine();
 var fromJson2 = json2.FromJson<Alof>();
 Console.WriteLine(fromJson2.SalutiEBaci.Index);
 Console.WriteLine(fromJson2.SalutiEBaci.Value);
-Console.WriteLine(fromJson2.SalutiEBaci.AsT1);
+Console.WriteLine(fromJson2.SalutiEBaci.AsT0.Selfish);
+Console.WriteLine(fromJson2.Fakam.AsT3.Olaf);

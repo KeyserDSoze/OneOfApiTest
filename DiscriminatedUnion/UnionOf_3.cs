@@ -5,7 +5,7 @@ namespace System
     [JsonConverter(typeof(UnionConverter))]
     public class UnionOf<T0, T1, T2> : UnionOf<T0, T1>
     {
-        private Wrapper? _wrapper2;
+        private protected Wrapper? _wrapper2;
         public T2? AsT2 => Index == 2 && _wrapper2?.Entity != null ? (T2)_wrapper2.Entity : default;
         private protected override IEnumerable<Wrapper?> GetWrappers()
         {
@@ -19,7 +19,7 @@ namespace System
             if (value != null && value is T2 v2)
             {
                 Index = 2;
-                _wrapper1 = new(v2);
+                _wrapper2 = new(v2);
             }
         }
         public static implicit operator UnionOf<T0, T1, T2>(T0 entity)

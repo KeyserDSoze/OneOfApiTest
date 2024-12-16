@@ -17,6 +17,12 @@ namespace ConsoleApp1
         public UnionOf<string, int>? Test { get; set; }
         [JsonPropertyName("calif")]
         public UnionOf<Porlo, Farlo, int> SalutiEBaci { get; set; }
+        [JsonPropertyName("fakam")]
+        public UnionOf<Porlo, Farlo, int, Fakam> Fakam { get; set; }
+    }
+    public sealed class Fakam
+    {
+        public string Olaf { get; set; }
     }
     public sealed class Farlo
     {

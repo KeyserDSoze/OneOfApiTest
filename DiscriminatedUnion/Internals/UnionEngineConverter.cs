@@ -41,6 +41,7 @@ namespace System
                 {
                     2 => typeof(UnionOf<,>),
                     3 => typeof(UnionOf<,,>),
+                    4 => typeof(UnionOf<,,,>),
                     _ => throw new NotSupportedException()
                 };
             }

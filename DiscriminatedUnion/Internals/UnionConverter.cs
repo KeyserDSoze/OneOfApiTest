@@ -12,7 +12,9 @@ namespace System
             {
                 return false;
             }
-            if (typeToConvert.GetGenericTypeDefinition() == typeof(UnionOf<,>))
+            if (typeToConvert.GetGenericTypeDefinition() == typeof(UnionOf<,>)
+                || typeToConvert.GetGenericTypeDefinition() == typeof(UnionOf<,,>)
+                || typeToConvert.GetGenericTypeDefinition() == typeof(UnionOf<,,,>))
             {
                 return true;
             }

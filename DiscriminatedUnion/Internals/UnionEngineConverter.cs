@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Linq;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -30,7 +31,35 @@ namespace System
                 var reader = (Activator.CreateInstance(readHelperType, [converter, readMethod]) as ReadHelper)!;
                 _readers.Add(type, reader);
                 _writers.Add(type, new WriteHelper(converter, writeMethod));
-                _properties.Add(type, type.GetProperties().Select(x => x.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? x.Name).ToDictionary(x => x, x => true));
+                _properties.Add(type, []);
+                AddProperties(null, type);
+                void AddProperties(string? from, Type currentType)
+                {
+                    foreach (var property in currentType.GetProperties())
+                    {
+                        AddProperty(null, property);
+                    }
+                }
+                void AddProperty(string? from, PropertyInfo propertyInfo)
+                {
+                    var name = $"{from}.{(propertyInfo.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? propertyInfo.Name)}";
+                    if (propertyInfo.PropertyType.IsPrimitive())
+                    {
+                        _properties[type].Add(name, true);
+                    }
+                    else if (propertyInfo.PropertyType.IsEnumerable())
+                    {
+                        AddProperties(name, propertyInfo.PropertyType.GetGenericArguments().First());
+                    }
+                    else if (propertyInfo.PropertyType.IsDictionary())
+                    {
+                        AddProperties(name, propertyInfo.PropertyType.GetGenericArguments().Last());
+                    }
+                    else
+                    {
+                        AddProperties(name, propertyInfo.PropertyType);
+                    }
+                }
             }
             _unionOfType = GetUnionType(types.Length).MakeGenericType(_types);
             _value = _unionOfType.GetProperty(ValuePropertyName)!;
@@ -71,36 +100,63 @@ namespace System
         }
         private Type? GetPossibleType(Utf8JsonReader reader)
         {
-            foreach (var type in _types)
+            if (reader.TokenType == JsonTokenType.String ||
+                reader.TokenType == JsonTokenType.Number ||
+                reader.TokenType == JsonTokenType.False ||
+                reader.TokenType == JsonTokenType.True)
             {
-                var isPrimitive =
-                       (reader.TokenType == JsonTokenType.String && type == typeof(string))
-                    || (reader.TokenType == JsonTokenType.Number && type.IsNumeric())
-                    || ((reader.TokenType == JsonTokenType.True || reader.TokenType == JsonTokenType.False) && (type == typeof(bool) || type == typeof(bool?)));
-                if (isPrimitive)
-                    return type;
-            }
-            List<string> properties = new();
-            while (reader.Read())
-            {
-                if (reader.TokenType == JsonTokenType.EndObject)
-                    break;
-                if (reader.TokenType == JsonTokenType.PropertyName)
+                foreach (var type in _types)
                 {
-                    properties.Add(reader.GetString()!);
+                    var isPrimitive =
+                           (reader.TokenType == JsonTokenType.String && type == typeof(string))
+                        || (reader.TokenType == JsonTokenType.Number && type.IsNumeric())
+                        || ((reader.TokenType == JsonTokenType.True || reader.TokenType == JsonTokenType.False) && (type == typeof(bool) || type == typeof(bool?)));
+                    if (isPrimitive)
+                        return type;
                 }
             }
-            foreach (var type in _types)
+            else
             {
-                var propertiesAsNameMap = _properties[type];
-                foreach (var property in properties)
+                List<string> properties = [];
+                var initialDepth = reader.CurrentDepth;
+                string? prefix = null;
+                string? name = null;
+                while (reader.Read())
                 {
-                    if (!propertiesAsNameMap.ContainsKey(property))
-                    {
+                    if (initialDepth == reader.CurrentDepth && reader.TokenType == JsonTokenType.EndObject)
                         break;
+                    if (reader.TokenType == JsonTokenType.StartObject)
+                    {
+                        prefix = name;
+                    }
+                    else if (reader.TokenType == JsonTokenType.EndObject)
+                    {
+                        if (prefix != null)
+                        {
+                            prefix = string.Join('.', prefix.Split('.')[0..^1]);
+                        }
+                    }
+                    if (reader.TokenType == JsonTokenType.PropertyName)
+                    {
+                        name = $"{prefix}.{reader.GetString()!}";
+                        properties.Add(name);
                     }
                 }
-                return type;
+                foreach (var type in _types)
+                {
+                    var propertiesAsNameMap = _properties[type];
+                    var correctType = true;
+                    foreach (var property in properties)
+                    {
+                        if (!propertiesAsNameMap.ContainsKey(property))
+                        {
+                            correctType = false;
+                            break;
+                        }
+                    }
+                    if (correctType)
+                        return type;
+                }
             }
             return null;
         }

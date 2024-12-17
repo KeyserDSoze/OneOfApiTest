@@ -6,11 +6,22 @@ namespace System
     [JsonConverter(typeof(UnionConverter))]
     public class UnionOf<T0, T1>
     {
+        private protected Q? Check<Q>(int index, Wrapper? wrapper)
+        {
+            if (Index != index)
+                return default;
+            if (wrapper == null)
+                return default;
+            if (wrapper.Entity == null)
+                return default;
+            var entity = (Q)wrapper.Entity;
+            return entity;
+        }
         private protected Wrapper? _wrapper0;
         private protected Wrapper? _wrapper1;
         public int Index { get; private protected set; } = -1;
-        public T0? AsT0 => Index == 0 && _wrapper0?.Entity != null ? (T0)_wrapper0.Entity : default;
-        public T1? AsT1 => Index == 1 && _wrapper1?.Entity != null ? (T1)_wrapper1.Entity : default;
+        public T0? AsT0 => Check<T0>(0, _wrapper0);
+        public T1? AsT1 => Check<T1>(1, _wrapper1);
         private protected virtual IEnumerable<Wrapper?> GetWrappers()
         {
             yield return _wrapper0;

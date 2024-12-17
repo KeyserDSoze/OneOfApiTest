@@ -6,7 +6,7 @@ namespace System
     public class UnionOf<T0, T1, T2> : UnionOf<T0, T1>
     {
         private protected Wrapper? _wrapper2;
-        public T2? AsT2 => Index == 2 && _wrapper2?.Entity != null ? (T2)_wrapper2.Entity : default;
+        public T2? AsT2 => Check<T2>(2, _wrapper2);
         private protected override IEnumerable<Wrapper?> GetWrappers()
         {
             foreach (var wrapper in base.GetWrappers())

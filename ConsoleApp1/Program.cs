@@ -85,3 +85,4 @@ Console.WriteLine(fromJson2.SalutiEBaci.Value);
 Console.WriteLine(fromJson2.SalutiEBaci.AsT0.Selfish);
 Console.WriteLine(fromJson2.Fakam.AsT3.Olaf);
 Console.WriteLine(fromJson2.Fakam.AsT3.Farlo.RandomX);
+Console.WriteLine(fromJson2.Fakam.AsT3.FarloDictionary.First().Key);

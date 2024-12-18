@@ -119,70 +119,13 @@ namespace System
             {
                 List<string> properties = [];
                 var initialDepth = reader.CurrentDepth;
-                string? prefix = null;
-                string? name = null;
-                var isArray = false;
-                var isDictionary = false;
-                var objectCounter = 0;
                 while (reader.Read())
                 {
-                    if (!isDictionary)
-                    {
-                        if (reader.TokenType == JsonTokenType.StartObject)
-                        {
-                            objectCounter++;
-                        }
-                        else
-                        {
-                            objectCounter = 0;
-                        }
-                        if (objectCounter == 2)
-                        {
-                            isDictionary = true;
-                            objectCounter = 0;
-                        }
-                    }
-                    else if (isDictionary)
-                    {
-                        if (reader.TokenType == JsonTokenType.EndObject)
-                        {
-                            objectCounter--;
-                        }
-                        else
-                        {
-                            objectCounter = 0;
-                        }
-                        if (objectCounter == -2)
-                            isDictionary = false;
-                    }
-                    if (isDictionary)
-                        continue;
-                    else if (isArray && reader.TokenType != JsonTokenType.EndArray)
-                        continue;
-                    else if (initialDepth == reader.CurrentDepth && reader.TokenType == JsonTokenType.EndObject)
+                    if (initialDepth == reader.CurrentDepth && reader.TokenType == JsonTokenType.EndObject)
                         break;
-                    else if (reader.TokenType == JsonTokenType.StartArray)
+                    else if (initialDepth + 1 == reader.CurrentDepth && reader.TokenType == JsonTokenType.PropertyName)
                     {
-                        isArray = true;
-                    }
-                    else if (reader.TokenType == JsonTokenType.EndArray)
-                    {
-                        isArray = false;
-                    }
-                    else if (reader.TokenType == JsonTokenType.StartObject)
-                    {
-                        prefix = name;
-                    }
-                    else if (reader.TokenType == JsonTokenType.EndObject)
-                    {
-                        if (prefix != null)
-                        {
-                            prefix = string.Join('.', prefix.Split('.')[0..^1]);
-                        }
-                    }
-                    else if (reader.TokenType == JsonTokenType.PropertyName)
-                    {
-                        name = $"{prefix}.{reader.GetString()!}";
+                        var name = $".{reader.GetString()!}";
                         properties.Add(name);
                     }
                 }

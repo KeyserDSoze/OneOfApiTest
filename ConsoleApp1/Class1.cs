@@ -23,6 +23,13 @@ namespace ConsoleApp1
     public sealed class Fakam
     {
         public string Olaf { get; set; }
+        public Farlo Farlo { get; set; }
+        [JsonPropertyName("qulo")]
+        public List<string> Molest { get; set; }
+        public List<Farlo> FarloList { get; set; }
+        public Dictionary<string, string> Makko { get; set; }
+        [JsonPropertyName("a")]
+        public Dictionary<string, Farlo> FarloDictionary { get; set; }
     }
     public sealed class Farlo
     {

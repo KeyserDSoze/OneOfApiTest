@@ -1,11 +1,10 @@
-﻿using System.Linq;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace System
 {
-    internal sealed class UnionEngineConverter : JsonConverter<object>
+    internal sealed class UnionConverterEngine : JsonConverter<object>
     {
         private const string ValuePropertyName = "Value";
         private const string ReadMethodName = "Read";
@@ -17,7 +16,7 @@ namespace System
         private readonly Dictionary<Type, Dictionary<string, bool>> _properties = [];
         private readonly Type _unionOfType;
         private readonly PropertyInfo _value;
-        public UnionEngineConverter(JsonSerializerOptions options, params Type[] types)
+        public UnionConverterEngine(JsonSerializerOptions options, params Type[] types)
         {
             _options = options;
             _types = types;
@@ -37,23 +36,24 @@ namespace System
                 {
                     foreach (var property in currentType.GetProperties())
                     {
-                        AddProperty(null, property);
+                        AddProperty(from, property);
                     }
                 }
                 void AddProperty(string? from, PropertyInfo propertyInfo)
                 {
                     var name = $"{from}.{(propertyInfo.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? propertyInfo.Name)}";
+                    _properties[type].Add(name, true);
                     if (propertyInfo.PropertyType.IsPrimitive())
                     {
-                        _properties[type].Add(name, true);
+                        return;
                     }
-                    else if (propertyInfo.PropertyType.IsEnumerable())
+                    else if (propertyInfo.PropertyType.IsDictionary() || propertyInfo.PropertyType.IsEnumerable())
                     {
-                        AddProperties(name, propertyInfo.PropertyType.GetGenericArguments().First());
-                    }
-                    else if (propertyInfo.PropertyType.IsDictionary())
-                    {
-                        AddProperties(name, propertyInfo.PropertyType.GetGenericArguments().Last());
+                        foreach (var genericType in propertyInfo.PropertyType.GetGenericArguments())
+                        {
+                            if (!genericType.IsPrimitive())
+                                AddProperties(name, genericType);
+                        }
                     }
                     else
                     {
@@ -105,7 +105,7 @@ namespace System
                 reader.TokenType == JsonTokenType.False ||
                 reader.TokenType == JsonTokenType.True)
             {
-                foreach (var type in _types)
+                foreach (var type in _types.Where(x => x.IsPrimitive()))
                 {
                     var isPrimitive =
                            (reader.TokenType == JsonTokenType.String && type == typeof(string))
@@ -125,7 +125,7 @@ namespace System
                 {
                     if (initialDepth == reader.CurrentDepth && reader.TokenType == JsonTokenType.EndObject)
                         break;
-                    if (reader.TokenType == JsonTokenType.StartObject)
+                    else if (reader.TokenType == JsonTokenType.StartObject)
                     {
                         prefix = name;
                     }
@@ -136,26 +136,29 @@ namespace System
                             prefix = string.Join('.', prefix.Split('.')[0..^1]);
                         }
                     }
-                    if (reader.TokenType == JsonTokenType.PropertyName)
+                    else if (reader.TokenType == JsonTokenType.PropertyName)
                     {
                         name = $"{prefix}.{reader.GetString()!}";
                         properties.Add(name);
                     }
                 }
-                foreach (var type in _types)
+                foreach (var type in _types.Where(x => !x.IsPrimitive()))
                 {
                     var propertiesAsNameMap = _properties[type];
-                    var correctType = true;
-                    foreach (var property in properties)
+                    if (propertiesAsNameMap.Count >= properties.Count)
                     {
-                        if (!propertiesAsNameMap.ContainsKey(property))
+                        var correctType = true;
+                        foreach (var property in properties)
                         {
-                            correctType = false;
-                            break;
+                            if (!propertiesAsNameMap.ContainsKey(property))
+                            {
+                                correctType = false;
+                                break;
+                            }
                         }
+                        if (correctType)
+                            return type;
                     }
-                    if (correctType)
-                        return type;
                 }
             }
             return null;

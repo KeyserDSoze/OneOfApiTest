@@ -31,7 +31,19 @@ var alof2 = new Alof
     Numbers = 3,
     Camerun = true,
     SalutiEBaci = new Porlo { Selfish = "Saluti.Porlo.Selfish", Value = "Saluti.Porlo.Value" },
-    Fakam = new Fakam { Olaf = "Fakam.Olaf" }
+    Fakam = new Fakam
+    {
+        Olaf = "Fakam.Olaf",
+        Farlo = new Farlo { RandomX = "Fakam.Farlo.RandomX", Text = "Fakam.Farlo.Text" },
+        FarloList = [new Farlo { RandomX = "tt", Text = "xx" }],
+        Makko = new Dictionary<string, string> { ["key"] = "value", ["key2"] = "value" },
+        Molest = ["a", "b", "c"],
+        FarloDictionary = new Dictionary<string, Farlo>
+        {
+            ["key"] = new Farlo { Text = "value", RandomX = "value" },
+            ["key2"] = new Farlo { Text = "value2", RandomX = "value2" },
+        }
+    }
 };
 var alof3 = new Alof
 {
@@ -72,3 +84,4 @@ Console.WriteLine(fromJson2.SalutiEBaci.Index);
 Console.WriteLine(fromJson2.SalutiEBaci.Value);
 Console.WriteLine(fromJson2.SalutiEBaci.AsT0.Selfish);
 Console.WriteLine(fromJson2.Fakam.AsT3.Olaf);
+Console.WriteLine(fromJson2.Fakam.AsT3.Farlo.RandomX);

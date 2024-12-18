@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace System
 {
-    [JsonConverter(typeof(UnionConverter))]
+    [JsonConverter(typeof(UnionConverterFactory))]
     public class UnionOf<T0, T1>
     {
         private protected Q? Check<Q>(int index, Wrapper? wrapper)

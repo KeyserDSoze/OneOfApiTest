@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace System
 {
-    internal sealed class UnionConverter : JsonConverterFactory
+    internal sealed class UnionConverterFactory : JsonConverterFactory
     {
         public override bool CanConvert(Type typeToConvert)
         {
@@ -23,7 +23,7 @@ namespace System
         public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options)
         {
             Type[] typeArguments = typeToConvert.GetGenericArguments();
-            return new UnionEngineConverter(options, typeArguments);
+            return new UnionConverterEngine(options, typeArguments);
         }
     }
 }

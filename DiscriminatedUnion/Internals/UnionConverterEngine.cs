@@ -31,34 +31,10 @@ namespace System
                 _readers.Add(type, reader);
                 _writers.Add(type, new WriteHelper(converter, writeMethod));
                 _properties.Add(type, []);
-                AddProperties(null, type);
-                void AddProperties(string? from, Type currentType)
+                foreach (var property in type.GetProperties())
                 {
-                    foreach (var property in currentType.GetProperties())
-                    {
-                        AddProperty(from, property);
-                    }
-                }
-                void AddProperty(string? from, PropertyInfo propertyInfo)
-                {
-                    var name = $"{from}.{(propertyInfo.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? propertyInfo.Name)}";
+                    var name = property.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? property.Name;
                     _properties[type].Add(name, true);
-                    if (propertyInfo.PropertyType.IsPrimitive())
-                    {
-                        return;
-                    }
-                    else if (propertyInfo.PropertyType.IsDictionary() || propertyInfo.PropertyType.IsEnumerable())
-                    {
-                        foreach (var genericType in propertyInfo.PropertyType.GetGenericArguments())
-                        {
-                            if (!genericType.IsPrimitive())
-                                AddProperties(name, genericType);
-                        }
-                    }
-                    else
-                    {
-                        AddProperties(name, propertyInfo.PropertyType);
-                    }
                 }
             }
             _unionOfType = GetUnionType(types.Length).MakeGenericType(_types);
@@ -125,7 +101,7 @@ namespace System
                         break;
                     else if (initialDepth + 1 == reader.CurrentDepth && reader.TokenType == JsonTokenType.PropertyName)
                     {
-                        var name = $".{reader.GetString()!}";
+                        var name = reader.GetString()!;
                         properties.Add(name);
                     }
                 }

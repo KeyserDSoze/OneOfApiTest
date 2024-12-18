@@ -48,6 +48,7 @@ namespace System
                 _wrapper1 = new(v1);
             }
         }
+        public T? Get<T>() => Value is T value ? value : default;
         public object? Value
         {
             get

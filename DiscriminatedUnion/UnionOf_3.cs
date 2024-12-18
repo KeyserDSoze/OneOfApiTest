@@ -6,7 +6,7 @@ namespace System
     public class UnionOf<T0, T1, T2> : UnionOf<T0, T1>
     {
         private protected Wrapper? _wrapper2;
-        public T2? AsT2 => Check<T2>(2, _wrapper2);
+        public T2? AsT2 => TryGet<T2>(2, _wrapper2);
         private protected override IEnumerable<Wrapper?> GetWrappers()
         {
             foreach (var wrapper in base.GetWrappers())
@@ -24,15 +24,15 @@ namespace System
         }
         public static implicit operator UnionOf<T0, T1, T2>(T0 entity)
         {
-            return new UnionOf<T0, T1, T2> { _wrapper0 = new(entity) };
+            return new() { _wrapper0 = new(entity) };
         }
         public static implicit operator UnionOf<T0, T1, T2>(T1 entity)
         {
-            return new UnionOf<T0, T1, T2> { _wrapper1 = new(entity) };
+            return new() { _wrapper1 = new(entity) };
         }
         public static implicit operator UnionOf<T0, T1, T2>(T2 entity)
         {
-            return new UnionOf<T0, T1, T2> { _wrapper2 = new(entity) };
+            return new() { _wrapper2 = new(entity) };
         }
     }
 }

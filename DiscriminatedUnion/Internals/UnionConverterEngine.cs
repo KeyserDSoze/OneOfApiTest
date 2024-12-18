@@ -131,14 +131,14 @@ namespace System
             object value,
             JsonSerializerOptions options)
         {
-            if (value != null)
+            if (value is IUnionOf unionOf)
             {
-                var dynamicValue = ((dynamic)value).Value;
-                if (dynamicValue != null)
+                var currentValue = unionOf.Value;
+                if (currentValue != null)
                 {
-                    var currentType = (dynamicValue.GetType() as Type)!;
+                    var currentType = currentValue.GetType();
                     var writeHelper = _writers[currentType];
-                    writeHelper.Write(writer, dynamicValue, options);
+                    writeHelper.Write(writer, currentValue, options);
                 }
             }
         }

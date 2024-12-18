@@ -55,8 +55,22 @@ var alof3 = new Alof
     },
     Felicina = "dalkdsa",
     Numbers = 3,
-    Camerun = true
+    Camerun = true,
+    Fakam = new Fakam
+    {
+        Olaf = "Fakam.Olaf",
+        Farlo = new Farlo { RandomX = "Fakam.Farlo.RandomX", Text = "Fakam.Farlo.Text" },
+        FarloList = [new Farlo { RandomX = "tt", Text = "xx" }],
+        Makko = new Dictionary<string, string> { ["key"] = "value", ["key2"] = "value" },
+        Molest = ["a", "b", "c"],
+        FarloDictionary = new Dictionary<string, Farlo>
+        {
+            ["key"] = new Farlo { Text = "value", RandomX = "value" },
+            ["key2"] = new Farlo { Text = "value2", RandomX = "value2" },
+        }
+    }
 };
+alof3.Fakam = new Farlo { RandomX = "Rewritten.Fakam.Farlo.RandomX", Text = "Fakam.Farlo.Text" };
 
 var json = alof1.ToJson(new JsonSerializerOptions
 {
@@ -86,3 +100,6 @@ Console.WriteLine(fromJson2.SalutiEBaci.AsT0.Selfish);
 Console.WriteLine(fromJson2.Fakam.AsT3.Olaf);
 Console.WriteLine(fromJson2.Fakam.AsT3.Farlo.RandomX);
 Console.WriteLine(fromJson2.Fakam.AsT3.FarloDictionary.First().Key);
+
+var fromJson3 = json3.FromJson<Alof>();
+Console.WriteLine(fromJson3.Fakam.AsT1.RandomX);

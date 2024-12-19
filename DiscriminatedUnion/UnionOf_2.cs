@@ -6,54 +6,64 @@ namespace System
     [JsonConverter(typeof(UnionConverterFactory))]
     public class UnionOf<T0, T1> : IUnionOf
     {
-        private protected Q? TryGet<Q>(int index, Wrapper? wrapper)
+        private Wrapper[]? _wrappers;
+        public int Index { get; private protected set; } = -1;
+        public T0? AsT0 => TryGet<T0>(0);
+        public T1? AsT1 => TryGet<T1>(1);
+        private protected virtual int MaxIndex => 2;
+        public UnionOf(object? value)
+        {
+            UnionOfInstance(value);
+        }
+        private protected void UnionOfInstance(object? value)
+        {
+            _wrappers = new Wrapper[MaxIndex];
+            var check = SetWrappers(value);
+            if (!check)
+                throw new ArgumentException($"Invalid value in UnionOf. You're passing an object of type: {value?.GetType().FullName}", nameof(value));
+        }
+        private protected Q? TryGet<Q>(int index)
         {
             if (Index != index)
                 return default;
-            if (wrapper == null)
+            var value = _wrappers![index];
+            if (value?.Entity == null)
                 return default;
-            if (wrapper.Entity == null)
-                return default;
-            var entity = (Q)wrapper.Entity;
+            var entity = (Q)value.Entity;
             return entity;
         }
-        private protected Wrapper? _wrapper0;
-        private protected Wrapper? _wrapper1;
-        public int Index { get; private protected set; } = -1;
-        public T0? AsT0 => TryGet<T0>(0, _wrapper0);
-        public T1? AsT1 => TryGet<T1>(1, _wrapper1);
-        private protected virtual IEnumerable<Wrapper?> GetWrappers()
+        private protected virtual bool SetWrappers(object? value)
         {
-            yield return _wrapper0;
-            yield return _wrapper1;
-        }
-        private protected virtual void SetWrappers(object? value)
-        {
-            foreach (var wrapper in GetWrappers())
+            foreach (var wrapper in _wrappers!)
             {
                 if (wrapper?.Entity != null)
                     wrapper.Entity = null;
             }
             Index = -1;
             if (value == null)
-                return;
-            if (value is T0 v0)
+                return true;
+            else if (Set<T0>(0, value))
+                return true;
+            else if (Set<T1>(1, value))
+                return true;
+            return false;
+        }
+        private protected bool Set<T>(int index, object? value)
+        {
+            if (value is T v)
             {
-                Index = 0;
-                _wrapper0 = new(v0);
+                Index = index;
+                _wrappers![index] = new(v);
+                return true;
             }
-            else if (value is T1 v1)
-            {
-                Index = 1;
-                _wrapper1 = new(v1);
-            }
+            return false;
         }
         public T? Get<T>() => Value is T value ? value : default;
         public object? Value
         {
             get
             {
-                foreach (var wrapper in GetWrappers())
+                foreach (var wrapper in _wrappers!)
                 {
                     if (wrapper?.Entity != null)
                         return wrapper.Entity;
@@ -66,9 +76,9 @@ namespace System
             }
         }
         public static implicit operator UnionOf<T0, T1>(T0 entity)
-            => new() { _wrapper0 = new(entity) };
+            => new(entity);
         public static implicit operator UnionOf<T0, T1>(T1 entity)
-            => new() { _wrapper1 = new(entity) };
+            => new(entity);
         public override string? ToString()
             => Value?.ToString();
         public override bool Equals(object? obj)

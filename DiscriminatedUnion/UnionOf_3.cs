@@ -5,34 +5,21 @@ namespace System
     [JsonConverter(typeof(UnionConverterFactory))]
     public class UnionOf<T0, T1, T2> : UnionOf<T0, T1>
     {
-        private protected Wrapper? _wrapper2;
-        public T2? AsT2 => TryGet<T2>(2, _wrapper2);
-        private protected override IEnumerable<Wrapper?> GetWrappers()
+        public T2? AsT2 => TryGet<T2>(2);
+        private protected override int MaxIndex => 3;
+        public UnionOf(object? value) : base(value)
         {
-            foreach (var wrapper in base.GetWrappers())
-                yield return wrapper;
-            yield return _wrapper2;
         }
-        private protected override void SetWrappers(object? value)
+        private protected override bool SetWrappers(object? value)
         {
-            base.SetWrappers(value);
-            if (value != null && value is T2 v2)
-            {
-                Index = 2;
-                _wrapper2 = new(v2);
-            }
+            if (base.SetWrappers(value))
+                return true;
+            else if (Set<T2>(2, value))
+                return true;
+            return false;
         }
-        public static implicit operator UnionOf<T0, T1, T2>(T0 entity)
-        {
-            return new() { _wrapper0 = new(entity) };
-        }
-        public static implicit operator UnionOf<T0, T1, T2>(T1 entity)
-        {
-            return new() { _wrapper1 = new(entity) };
-        }
-        public static implicit operator UnionOf<T0, T1, T2>(T2 entity)
-        {
-            return new() { _wrapper2 = new(entity) };
-        }
+        public static implicit operator UnionOf<T0, T1, T2>(T0 entity) => new(entity);
+        public static implicit operator UnionOf<T0, T1, T2>(T1 entity) => new(entity);
+        public static implicit operator UnionOf<T0, T1, T2>(T2 entity) => new(entity);
     }
 }

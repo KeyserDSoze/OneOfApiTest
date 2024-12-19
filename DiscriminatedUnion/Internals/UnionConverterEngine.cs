@@ -15,7 +15,6 @@ namespace System
         private readonly Dictionary<Type, WriteHelper> _writers = [];
         private readonly Dictionary<Type, Dictionary<string, bool>> _properties = [];
         private readonly Type _unionOfType;
-        private readonly PropertyInfo _value;
         public UnionConverterEngine(JsonSerializerOptions options, params Type[] types)
         {
             _options = options;
@@ -38,7 +37,6 @@ namespace System
                 }
             }
             _unionOfType = GetUnionType(types.Length).MakeGenericType(_types);
-            _value = _unionOfType.GetProperty(ValuePropertyName)!;
 
             static Type GetUnionType(int numberOfTypes)
             {
@@ -63,10 +61,9 @@ namespace System
             var currentType = GetPossibleType(reader);
             if (currentType != null)
             {
-                var instance = (dynamic)Activator.CreateInstance(_unionOfType)!;
                 var readHelper = _readers[currentType];
                 var result = readHelper.Read(ref reader, currentType, options);
-                _value.SetValue(instance, result);
+                var instance = (dynamic)Activator.CreateInstance(_unionOfType, [result])!;
                 return instance;
             }
             else

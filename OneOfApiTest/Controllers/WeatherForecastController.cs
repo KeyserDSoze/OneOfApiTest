@@ -25,7 +25,8 @@ namespace OneOfApiTest.Controllers
             {
                 Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
                 TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+                Summary = Summaries[Random.Shared.Next(Summaries.Length)],
+                Time = index % 2 == 0 ? new CurrentTime { Time = DateTime.Now } : "ciao",
             })
             .ToArray();
         }

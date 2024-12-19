@@ -7,6 +7,7 @@ namespace System
     public class UnionOf<T0, T1> : IUnionOf
     {
         private Wrapper[]? _wrappers;
+        [JsonIgnore]
         public int Index { get; private protected set; } = -1;
         public T0? AsT0 => TryGet<T0>(0);
         public T1? AsT1 => TryGet<T1>(1);

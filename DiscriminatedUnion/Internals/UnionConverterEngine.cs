@@ -6,10 +6,8 @@ namespace System
 {
     internal sealed class UnionConverterEngine : JsonConverter<object>
     {
-        private const string ValuePropertyName = "Value";
         private const string ReadMethodName = "Read";
         private const string WriteMethodName = "Write";
-        private readonly JsonSerializerOptions _options;
         private readonly Type[] _types;
         private readonly Dictionary<Type, ReadHelper> _readers = [];
         private readonly Dictionary<Type, WriteHelper> _writers = [];
@@ -17,7 +15,6 @@ namespace System
         private readonly Type _unionOfType;
         public UnionConverterEngine(JsonSerializerOptions options, params Type[] types)
         {
-            _options = options;
             _types = types;
             foreach (var type in types)
             {

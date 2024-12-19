@@ -4,7 +4,7 @@ namespace ConsoleApp1
 {
     public sealed class SecondClass
     {
-        [JsonPropertyName("qq")]
+        [JsonPropertyName("FirstProperty")]
         public string FirstProperty { get; set; }
         [JsonPropertyName("dd")]
         public string SecondProperty { get; set; }

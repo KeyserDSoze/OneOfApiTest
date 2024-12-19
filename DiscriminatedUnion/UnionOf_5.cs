@@ -3,13 +3,10 @@
 namespace System
 {
     [JsonConverter(typeof(UnionConverterFactory))]
-    public class UnionOf<T0, T1, T2, T3, T4> : UnionOf<T0, T1, T2, T3>
+    public class UnionOf<T0, T1, T2, T3, T4>(object? value) : UnionOf<T0, T1, T2, T3>(value)
     {
         public T4? AsT4 => TryGet<T4>(4);
         private protected override int MaxIndex => 5;
-        public UnionOf(object? value) : base(value)
-        {
-        }
         private protected override bool SetWrappers(object? value)
         {
             if (base.SetWrappers(value))
